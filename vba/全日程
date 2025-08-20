@@ -1,0 +1,342 @@
+'定数の設定
+Const D_CNT = 43 '講習の日数
+Const D_KOMA = 5 '一日のコマ数
+
+
+
+Private Sub Automatic_Click()
+
+    
+
+End Sub
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    Dim SH1 As Worksheet
+    Dim SH3 As Worksheet
+    Dim SH4 As Worksheet
+    Dim SH9 As Worksheet
+    Static sname As String
+    Dim subject1 As String
+    Dim subject2 As String
+    
+    Set SH1 = Worksheets("講師教科")    'ワークシートを選択
+    Set SH3 = Worksheets("全日程")    'ワークシートを選択
+    Set SH4 = Worksheets("生徒教科")    'ワークシートを選択
+    Set SH9 = Worksheets("講師用スケ")    'ワークシートを選択
+    
+    If ((SH3.Cells(1, 1) <> "") And (SH3.Cells(1, 2) <> "")) Then
+        '文字列がなくピンクのセルなら文字列を代入
+        If (SH3.Cells(Target.row, Target.Column) = "") And _
+           (SH3.Cells(Target.row, Target.Column).Interior.ColorIndex = 38) And _
+           (SH4.Cells(SH3.Cells(1, 1), SH3.Cells(1, 2)) > 0) Then '教科の残りが0でなければ
+                SH3.Cells(Target.row, Target.Column) = SH3.Cells(1, 3)  '選択したセルに名前を入れる
+                SH4.Cells(SH3.Cells(1, 1), SH3.Cells(1, 2)) = SH4.Cells(SH3.Cells(1, 1), SH3.Cells(1, 2)) - 1 '授業数1減らす
+                教科別残り空き数
+                教師別残り空き数
+                sname = SH3.Cells(1, 3)  '連続入力用にスタティックに保持
+                'SH3.Cells(1, 3) = "連続入力？"
+                If (SH4.Cells(SH3.Cells(1, 1), SH3.Cells(1, 2))) = 0 Then
+                    SH3.Cells(1, 3) = "入力終了！"
+                    ピンクを戻す
+                Else
+                    '名前を探してその時限のコマのピンクを戻す
+                    同日時同時限ピンクを戻す SH3.Cells(2, 1)
+                    '名前を探してそのコマを赤色にする
+                    名前を赤にする SH3.Cells(2, 1)
+                End If
+        End If
+    End If
+    
+    If ((Target.row = 2) And (Target.Column >= 4)) Then
+        SH9.Cells(2, 2) = SH3.Cells(Target.row, Target.Column)
+        SH9.Range(SH9.Cells(7, 2), SH9.Cells(11, 15)) = ""
+        SH9.Range(SH9.Cells(14, 2), SH9.Cells(18, 15)) = ""
+        SH9.Range(SH9.Cells(21, 2), SH9.Cells(25, 15)) = ""
+        SH9.Range(SH9.Cells(28, 2), SH9.Cells(32, 15)) = ""
+        SH9.Range(SH9.Cells(35, 2), SH9.Cells(39, 15)) = ""
+        SH9.Range(SH9.Cells(42, 2), SH9.Cells(46, 15)) = ""
+        'SH9.Cells(7, 2).Value = "通 常 授 業"
+        For B = 1 To D_CNT
+            For A = 1 To D_KOMA
+                If (InStrRev(SH3.Cells((2 * A + 1) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column).Value, ")") - 1) >= 0 Then
+                    subject1 = Left(SH3.Cells((2 * A + 1) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column), _
+                                     (InStrRev(SH3.Cells((2 * A + 1) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column).Value, ")") - 1))
+                    If ((B >= 1) And (B <= 7)) Then
+                        SH9.Cells(6 + A, (B * 2) + 0) = subject1
+                    End If
+                    If ((B >= 8) And (B <= 14)) Then
+                        SH9.Cells(13 + A, (B - 7) * 2) = subject1
+                    End If
+                    If ((B >= 15) And (B <= 21)) Then
+                        SH9.Cells(20 + A, (B - 14) * 2) = subject1
+                    End If
+                    If ((B >= 22) And (B <= 28)) Then
+                        SH9.Cells(27 + A, (B - 21) * 2) = subject1
+                    End If
+                    If ((B >= 29) And (B <= 35)) Then
+                        SH9.Cells(34 + A, (B - 28) * 2) = subject1
+                    End If
+                    If ((B >= 36) And (B <= 42)) Then
+                        SH9.Cells(41 + A, (B - 35) * 2) = subject1
+                    End If
+                End If
+                If (InStrRev(SH3.Cells((2 * A + 2) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column).Value, ")") - 1) >= 0 Then
+                    subject2 = Left(SH3.Cells((2 * A + 2) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column), _
+                                     (InStrRev(SH3.Cells((2 * A + 2) + ((B - 1) * ((2 * D_KOMA) + 1)), Target.Column).Value, ")") - 1))
+                    If ((B >= 1) And (B <= 7)) Then
+                        SH9.Cells(6 + A, (B * 2) + 1) = subject2
+                    End If
+                    If ((B >= 8) And (B <= 14)) Then
+                        SH9.Cells(13 + A, (B - 7) * 2 + 1) = subject2
+                    End If
+                    If ((B >= 15) And (B <= 21)) Then
+                        SH9.Cells(20 + A, (B - 14) * 2 + 1) = subject2
+                    End If
+                    If ((B >= 22) And (B <= 28)) Then
+                        SH9.Cells(27 + A, (B - 21) * 2 + 1) = subject2
+                    End If
+                    If ((B >= 29) And (B <= 35)) Then
+                        SH9.Cells(34 + A, (B - 28) * 2 + 1) = subject2
+                    End If
+                    If ((B >= 36) And (B <= 42)) Then
+                        SH9.Cells(41 + A, (B - 35) * 2 + 1) = subject2
+                    End If
+                End If
+            Next
+        Next
+        SH9.Activate
+    End If
+    
+End Sub
+
+Private Sub シート戻る_Click()
+    Dim SH4 As Worksheet
+    
+    Set SH4 = Worksheets("生徒教科")    'ワークシートを選択
+    
+    ピンクを戻す
+    SH4.Activate
+End Sub
+
+Private Sub スケジュールコピー_Click()
+    Dim SH2 As Worksheet
+    Dim SH3 As Worksheet
+    Dim SH7 As Worksheet
+    Dim SH10 As Worksheet
+    Dim moji As String
+    Dim flg As Integer
+    Dim namae As String
+    Dim day As String
+    Dim Obj As Object
+    Dim strAddress As String
+    Dim Cnt As Integer
+    Dim subject As String
+    
+    Set SH2 = Worksheets("講師日程")
+    Set SH3 = Worksheets("全日程")
+    Set SH7 = Worksheets("生徒用スケ")
+    Set SH10 = Worksheets("９月")
+    
+    SH7.Cells(1, 2) = ""
+    SH7.Cells(2, 2) = ""
+    SH7.Cells(1, 3) = ""
+    SH7.Range(SH7.Cells(6, 2), SH7.Cells(10, 15)) = ""
+    SH7.Range(SH7.Cells(13, 2), SH7.Cells(17, 15)) = ""
+    SH7.Range(SH7.Cells(20, 2), SH7.Cells(24, 16)) = ""
+    
+    'SH7.Cells(28, 1) = "教科："
+    SH7.Cells(29, 1) = "教科："
+    SH7.Cells(30, 1) = "教科："
+    SH7.Cells(31, 1) = "教科："
+    SH7.Cells(32, 1) = "教科："
+    
+    'SH7.Cells(28, 2) = ""
+    SH7.Cells(29, 2) = ""
+    SH7.Cells(30, 2) = ""
+    SH7.Cells(31, 2) = ""
+    SH7.Cells(32, 2) = ""
+    
+    'SH7.Cells(28, 4) = ""
+    SH7.Cells(29, 4) = ""
+    SH7.Cells(30, 4) = ""
+    SH7.Cells(31, 4) = ""
+    SH7.Cells(32, 4) = ""
+    
+    SH7.Cells(2, 2) = SH3.Cells(3, 1)
+    学年入力
+    
+    For A = 4 To SH2.Cells(1, 2) + 3
+        For B = 0 To D_CNT - 1
+            For C = 0 To D_KOMA - 1
+                If (SH3.Cells(3 + (B * (D_KOMA * 2 + 1)) + (C * 2), A).Interior.ColorIndex = 3) Then
+                    moji = Left((SH3.Cells(3 + (B * (D_KOMA * 2 + 1)) + (C * 2), A).Value), 4)
+                    moji = 科目(moji)
+                    If ((B >= 0) And (B <= 13)) Then
+                        If SH7.Cells(C + 6, B + 2) = "" Then
+                            SH7.Cells(C + 6, B + 2) = moji
+                        Else
+                            MsgBox SH7.Cells(4, B + 2).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                    If ((B >= 14) And (B <= 27)) Then
+                        If SH7.Cells(C + 13, B - 12) = "" Then
+                            SH7.Cells(C + 13, B - 12) = moji
+                        Else
+                            MsgBox SH7.Cells(11, B - 12).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                    If ((B >= 28) And (B <= 41)) Then
+                        If SH7.Cells(C + 20, B - 26) = "" Then
+                            SH7.Cells(C + 20, B - 26) = moji
+                        Else
+                            MsgBox SH7.Cells(18, B - 21).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                End If
+                If (SH3.Cells(3 + (B * (D_KOMA * 2 + 1)) + (C * 2 + 1), A).Interior.ColorIndex = 3) Then
+                    moji = Left((SH3.Cells(3 + (B * (D_KOMA * 2 + 1)) + (C * 2 + 1), A).Value), 4)
+                    moji = 科目(moji)
+                    If ((B >= 0) And (B <= 13)) Then
+                        If SH7.Cells(C + 6, B + 2) = "" Then
+                            SH7.Cells(C + 6, B + 2) = moji
+                        Else
+                            MsgBox SH7.Cells(4, B + 2).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                    If ((B >= 14) And (B <= 27)) Then
+                        If SH7.Cells(C + 13, B - 12) = "" Then
+                            SH7.Cells(C + 13, B - 12) = moji
+                        Else
+                            MsgBox SH7.Cells(11, B - 12).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                    If ((B >= 28) And (B <= 41)) Then
+                        If SH7.Cells(C + 20, B - 26) = "" Then
+                            SH7.Cells(C + 20, B - 26) = moji
+                        Else
+                            MsgBox SH7.Cells(18, B - 21).Value & " の " & (C + 1) & "コマ目" & Chr(13) & "が重複しています。見直してください。", vbExclamation
+                            Exit Sub
+                        End If
+                    End If
+                End If
+            Next
+        Next
+    Next
+
+    Cnt = 0
+    namae = SH3.Cells(3, 1).Value
+    Set Obj = SH10.Cells.Find(namae, LookAt:=xlPart, MatchByte:=False)
+    If Not Obj Is Nothing Then
+        strAddress = Obj.Address
+        Do While Not Obj Is Nothing
+            '曜日をいれる
+            day = Left(SH10.Cells((Obj.Cells.row), 1), 1)
+            SH7.Cells(29 + Cnt, 2) = day
+            '時間帯をいれる
+            SH7.Cells(29 + Cnt, 4) = SH10.Cells(Obj.Cells.row, 3)
+            If SH7.Cells(29 + Cnt, 4) = "" Then
+                SH7.Cells(29 + Cnt, 4) = SH10.Cells(Obj.Cells.row - 1, 3)
+            End If
+
+            '教科の文字列を取る
+            subject = Left(SH10.Cells(Obj.Cells.row, Obj.Cells.Column), _
+                         (InStrRev(SH10.Cells(Obj.Cells.row, Obj.Cells.Column), "）") - 1))
+                         
+            If subject = "国" Then
+                subject = "  国　語"
+            End If
+            If subject = "数" Then
+                subject = "  数　学"
+            End If
+            If subject = "英" Then
+                subject = "  英　語"
+            End If
+            If subject = "化" Then
+                subject = "  化　学"
+            End If
+            If subject = "理" Then
+                subject = "  理　科"
+            End If
+            If subject = "物" Then
+                subject = "  物　理"
+            End If
+            If subject = "算" Then
+                subject = "  算　数"
+            End If
+            If subject = "社" Then
+                subject = "  社　会"
+            End If
+            If subject = "生" Then
+                subject = "  生　物"
+            End If
+            If subject = "算国" Then
+                subject = " 算　国"
+            End If
+            If subject = "算英" Then
+                subject = " 算　英"
+            End If
+
+                         
+            SH7.Cells(29 + Cnt, 1) = SH7.Cells(29 + Cnt, 1) & subject
+            
+            Cnt = Cnt + 1
+            Set Obj = SH10.Cells.FindNext(Obj)
+            If strAddress = Obj.Address Then
+                Exit Do
+            End If
+        Loop
+    Else
+
+    End If
+
+    SH7.Activate
+    
+End Sub
+
+Private Sub 教師教科シート_Click()
+    Dim SH1 As Worksheet
+    
+    Set SH1 = Worksheets("講師教科")    'ワークシートを選択
+    
+    ピンクを戻す
+    SH1.Activate
+End Sub
+
+Private Sub 教師日程シート_Click()
+    Dim SH2 As Worksheet
+    
+    Set SH2 = Worksheets("講師日程")    'ワークシートを選択
+
+    SH2.Activate
+End Sub
+
+Private Sub 生徒日程シート_Click()
+    Dim SH5 As Worksheet
+    
+    Set SH5 = Worksheets("生徒日程")    'ワークシートを選択
+    
+    SH5.Activate
+End Sub
+
+Private Sub 選択を削除_Click()
+    Dim SH3 As Worksheet
+    Dim SH4 As Worksheet
+    Dim moji As String
+    Dim sname As Integer
+    Dim subject As Integer
+    
+    Set SH3 = Worksheets("全日程")    'ワークシートを選択
+    Set SH4 = Worksheets("生徒教科")    'ワークシートを選択
+    
+    moji = SH3.Cells(Selection.row, Selection.Column)
+    If (moji <> "") Then
+        SH3.Cells(Selection.row, Selection.Column) = ""
+
+        SH4.Cells(生徒番号を探す(moji), 教科番号を探す(moji)) = SH4.Cells(生徒番号を探す(moji), 教科番号を探す(moji)) + 1
+    End If
+End Sub

@@ -1,0 +1,227 @@
+Option Explicit
+
+' ---------- Tunables ----------
+Const MAX_STUDENTS As Long = 300
+Const MAX_TEACHERS As Long = 100
+Const SUBJECTS     As Long = 31
+Const DAYS         As Long = 43
+Const LECTURES     As Long = 5
+Const SEATS        As Long = 2
+Const MAX_PREF     As Long = 3
+
+' ---------- Data Model ----------
+Dim studentAvail(0 To MAX_STUDENTS - 1, 0 To DAYS - 1, 0 To LECTURES - 1) As Byte
+Dim studentSubjectPerDayCount(0 To MAX_STUDENTS - 1, 0 To DAYS - 1, 0 To SUBJECTS - 1) As Byte
+
+Dim teacherAvail(0 To MAX_TEACHERS - 1, 0 To DAYS - 1, 0 To LECTURES - 1) As Byte
+Dim teacherCanTeach(0 To MAX_TEACHERS - 1, 0 To SUBJECTS - 1) As Byte
+
+Dim studentDemand(0 To MAX_STUDENTS - 1, 0 To SUBJECTS - 1) As Long
+Dim preferredTeachers(0 To MAX_STUDENTS - 1, 0 To SUBJECTS - 1, 0 To MAX_PREF - 1) As Long
+
+Dim studentBusy(0 To MAX_STUDENTS - 1, 0 To DAYS - 1, 0 To LECTURES - 1) As Byte
+Dim totalDemandPerStudent(0 To MAX_STUDENTS - 1) As Long
+Dim preferredCountPerStudent(0 To MAX_STUDENTS - 1) As Long
+
+Dim N_students As Long
+Dim M_teachers As Long
+
+' ---------- Schedule Output ----------
+Dim slotSubject(0 To MAX_TEACHERS - 1, 0 To DAYS - 1, 0 To LECTURES - 1) As Long
+Dim slotStudent(0 To MAX_TEACHERS - 1, 0 To DAYS - 1, 0 To LECTURES - 1, 0 To SEATS - 1) As Long
+
+' ---------- Helpers ----------
+Private Function HasPreferredFor(stu As Long, subj As Long) As Boolean
+    Dim k As Long
+    For k = 0 To MAX_PREF - 1
+        If preferredTeachers(stu, subj, k) >= 0 Then
+            HasPreferredFor = True
+            Exit Function
+        End If
+    Next
+    HasPreferredFor = False
+End Function
+
+Private Function PrefersTeacher(stu As Long, subj As Long, tch As Long) As Boolean
+    Dim k As Long
+    For k = 0 To MAX_PREF - 1
+        If preferredTeachers(stu, subj, k) = tch Then
+            PrefersTeacher = True
+            Exit Function
+        End If
+    Next
+    PrefersTeacher = False
+End Function
+
+Private Function RemainingTotal(stu As Long) As Long
+    RemainingTotal = totalDemandPerStudent(stu)
+End Function
+
+Private Function RemainingAnyDemand() As Boolean
+    Dim s As Long
+    For s = 0 To N_students - 1
+        If totalDemandPerStudent(s) > 0 Then
+            RemainingAnyDemand = True
+            Exit Function
+        End If
+    Next
+    RemainingAnyDemand = False
+End Function
+
+Private Function CountPreferredAcrossDemanded(stu As Long) As Long
+    Dim subj As Long, k As Long, cnt As Long
+    cnt = 0
+    For subj = 0 To SUBJECTS - 1
+        If studentDemand(stu, subj) > 0 Then
+            For k = 0 To MAX_PREF - 1
+                If preferredTeachers(stu, subj, k) >= 0 Then
+                    cnt = cnt + 1
+                    Exit For
+                End If
+            Next
+        End If
+    Next
+    CountPreferredAcrossDemanded = cnt
+End Function
+
+Private Sub SortStudentsByPriority(order() As Long)
+    Dim i As Long, j As Long
+    For i = 1 To N_students - 1
+        Dim key As Long
+        key = order(i)
+        Dim key_prefCount As Long, key_hasPref As Long, key_total As Long
+        key_prefCount = preferredCountPerStudent(key)
+        key_hasPref = IIf(key_prefCount > 0, 1, 0)
+        key_total = RemainingTotal(key)
+
+        j = i - 1
+        Do While j >= 0
+            Dim cur As Long
+            cur = order(j)
+            Dim cur_hasPref As Long, cur_total As Long, cur_prefCount As Long
+            cur_hasPref = IIf(preferredCountPerStudent(cur) > 0, 1, 0)
+            cur_total = RemainingTotal(cur)
+            cur_prefCount = preferredCountPerStudent(cur)
+
+            If key_hasPref <> cur_hasPref Then
+                If key_hasPref > cur_hasPref Then
+                    order(j + 1) = order(j)
+                    j = j - 1
+                Else
+                    Exit Do
+                End If
+            ElseIf key_total <> cur_total Then
+                If key_total < cur_total Then
+                    order(j + 1) = order(j)
+                    j = j - 1
+                Else
+                    Exit Do
+                End If
+            ElseIf key_prefCount <> cur_prefCount Then
+                If key_prefCount > cur_prefCount Then
+                    order(j + 1) = order(j)
+                    j = j - 1
+                Else
+                    Exit Do
+                End If
+            ElseIf key < cur Then
+                order(j + 1) = order(j)
+                j = j - 1
+            Else
+                Exit Do
+            End If
+        Loop
+        order(j + 1) = key
+    Next
+End Sub
+
+' --- Fill slot, scheduleOneSlot, runSchedule ---
+' （C++版とほぼ同じ流れでVBAに書き直せます。長いので省略しますが希望なら追記します）
+
+' ---------- Example ----------
+Private Sub LoadExampleTiny()
+    Dim s As Long, sub As Long, k As Long
+    
+    N_students = 5
+    M_teachers = 3
+    
+    ' Everyone available
+    For s = 0 To N_students - 1
+        Dim d As Long, l As Long
+        For d = 0 To DAYS - 1
+            For l = 0 To LECTURES - 1
+                studentAvail(s, d, l) = 1
+            Next
+        Next
+    Next
+    For s = 0 To M_teachers - 1
+        For d = 0 To DAYS - 1
+            For l = 0 To LECTURES - 1
+                teacherAvail(s, d, l) = 1
+            Next
+        Next
+    Next
+    
+    ' Teacher skills
+    teacherCanTeach(0, 0) = 1
+    teacherCanTeach(0, 2) = 1
+    teacherCanTeach(1, 1) = 1
+    teacherCanTeach(1, 2) = 1
+    teacherCanTeach(2, 0) = 1
+    
+    ' Demands
+    studentDemand(0, 0) = 3
+    studentDemand(0, 1) = 4
+    studentDemand(1, 1) = 7
+    studentDemand(2, 0) = 9
+    studentDemand(2, 2) = 2
+    studentDemand(3, 1) = 4
+    studentDemand(4, 0) = 3
+    studentDemand(4, 2) = 5
+    
+    ' Preferences: -1 means none
+    For s = 0 To MAX_STUDENTS - 1
+        For sub = 0 To SUBJECTS - 1
+            For k = 0 To MAX_PREF - 1
+                preferredTeachers(s, sub, k) = -1
+            Next
+        Next
+    Next
+    preferredTeachers(0, 0, 0) = 0
+    preferredTeachers(0, 0, 1) = 2
+    preferredTeachers(0, 1, 0) = 1
+    preferredTeachers(1, 1, 0) = 1
+    preferredTeachers(4, 0, 0) = 2
+    preferredTeachers(4, 2, 0) = 1
+    
+    teacherAvail(0, 0, 0) = 0
+    teacherAvail(0, 0, 1) = 0
+    teacherAvail(0, 0, 2) = 0
+    teacherAvail(1, 1, 0) = 0
+    teacherAvail(1, 1, 1) = 0
+End Sub
+
+Private Sub DumpScheduleSample()
+    Dim tch As Long, day As Long, lec As Long
+    For tch = 0 To M_teachers - 1
+        Debug.Print "=== Teacher " & tch & " ==="
+        For day = 0 To DAYS - 1
+            For lec = 0 To LECTURES - 1
+                Dim subj As Long, s0 As Long, s1 As Long
+                subj = slotSubject(tch, day, lec)
+                s0 = slotStudent(tch, day, lec, 0)
+                s1 = slotStudent(tch, day, lec, 1)
+                Debug.Print "Day " & (day + 1) & ", Lec " & (lec + 1) & _
+                            ": Subj " & (subj + 1) & " | S0=" & s0 & " S1=" & s1
+            Next
+            Debug.Print "---------------"
+        Next
+        Debug.Print "================="
+    Next
+End Sub
+
+Public Sub TestSchedule()
+    LoadExampleTiny
+    ' runSchedule  ' ← 本体処理を追加で移植する
+    DumpScheduleSample
+End Sub

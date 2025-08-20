@@ -1,0 +1,123 @@
+    
+Private Sub クリアシート_Click()
+    Dim SH3 As Worksheet                'Worksheetの指定(全日程)
+    Set SH3 = Worksheets("全日程")      'ワークシートを選択
+    SH3.Cells.Clear
+End Sub
+
+Private Sub 日程反映_Click()
+    '変数宣言
+    Dim SH3 As Worksheet                'Worksheetの指定(全日程)
+    Dim SH2 As Worksheet                'Worksheetの指定(講師日程)
+    Dim SH1 As Worksheet                'Worksheetの指定(講師日程)
+    Dim teacher(50) As String           '文字列格納（講師名）
+    Dim day(50) As Date                 '文字列格納（日付）
+    Dim T_CNT As Integer                '講師人数カウンタ用
+    Dim D_CNT As Integer                '日数カウンタ用
+    Dim row As Integer                  '縦マスインクリメント用
+    Dim col As Integer                  '横マスインクリメント用
+    Dim D_KOMA As Integer               '一日のコマ数
+    
+    '初期値入力
+    D_KOMA = 5
+    T_CNT = 0
+    D_CNT = 0
+    Set SH3 = Worksheets("全日程")      'ワークシートを選択
+    Set SH2 = Worksheets("講師日程")    'ワークシートを選択
+    Set SH1 = Worksheets("講師教科")    'ワークシートを選択
+    
+    '講師の数のカウントと名前の格納
+    Do While Cells((4 + row), 2).Value <> ""        '空欄のセルまでループ
+        row = row + 1                               'マスのインクリメント
+        T_CNT = T_CNT + 1                           'カウンタインクリメント
+        teacher(row) = Cells((3 + row), 2).Value    '講師名をteacher()へ格納
+    Loop
+
+    '日付の数カウントと日付の格納
+    Do While Cells(2, (3 + (col * D_KOMA))).Value <> ""    '空欄のセルまでループ
+        col = col + 1                                 'マスのインクリメント
+        D_CNT = D_CNT + 1                             'カウンタインクリメント
+        day(col) = Cells(2, (3 + ((col - 1) * D_KOMA))).Value  '日付をday()へ格納
+    Loop
+    
+    '左の日付のセルの結合
+    For A = 1 To D_CNT
+        SH3.Range(SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2), _
+                 SH3.Cells((3 + A + ((A - 1) * (D_KOMA * 2))), 2)).Merge
+        SH3.Range(SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2), _
+                 SH3.Cells((1 + A + (A * (D_KOMA * 2))), 2)).Merge
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2) = day(A)    'セルに日付を貼り付け
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2) = _
+        WeekdayName(Weekday(SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2)))   '曜日の取得と代入
+        '以下、書式設定
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2).NumberFormatLocal = "d" '表示形式を変える
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2).Font.Size = 24 'フォントサイズを変更
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2).Font.Bold = True '太字にする
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2).HorizontalAlignment = xlHAlignCenter '水平方向中央
+        SH3.Cells((1 + A + ((A - 1) * (D_KOMA * 2))), 2).VerticalAlignment = xlVAlignCenter  '垂直方向中央
+        
+        
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2).Orientation = xlVertical    '縦書きにする
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2).Font.Size = 20 'フォントサイズを変更
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2).Font.Bold = True '太字にする
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2).HorizontalAlignment = xlHAlignCenter '水平方向中央
+        SH3.Cells((4 + A + ((A - 1) * (D_KOMA * 2))), 2).VerticalAlignment = xlVAlignCenter  '垂直方向中央& Chr(13) & Chr(10) &
+    Next
+    
+    'コマのセル結合
+    For A = 1 To D_CNT
+        For B = 1 To D_KOMA
+            SH3.Range(SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3), _
+                     SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 2)), 3)).Merge  'セルの結合
+            SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).HorizontalAlignment = xlHAlignCenter '水平方向中央
+            SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).VerticalAlignment = xlVAlignCenter '垂直方向中央
+            SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Font.Size = 12 'フォントサイズを変更
+            SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Font.Bold = True '太字にする
+            If B = 1 Then
+                SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Value = "1:55" & Chr(13) & Chr(10) & "↓" & Chr(13) & Chr(10) & "3:25"
+            ElseIf B = 2 Then
+                SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Value = "3:30" & Chr(13) & Chr(10) & "↓" & Chr(13) & Chr(10) & "5:00"
+            ElseIf B = 3 Then
+                SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Value = "5:05" & Chr(13) & Chr(10) & "↓" & Chr(13) & Chr(10) & "6:35"
+            ElseIf B = 4 Then
+                SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Value = "6:50" & Chr(13) & Chr(10) & "↓" & Chr(13) & Chr(10) & "8:20"
+            ElseIf B = 5 Then
+                SH3.Cells((((A - 1) * (1 + D_KOMA * 2)) + (B * 2 + 1)), 3).Value = "8:25" & Chr(13) & Chr(10) & "↓" & Chr(13) & Chr(10) & "9:55"
+            End If
+        Next
+    Next
+    
+    '講師の名前貼り付け
+    For A = 1 To T_CNT
+        For B = 1 To D_CNT
+            SH3.Cells((2 + ((B - 1) * (D_KOMA * 2 + 1))), (3 + A)) = teacher(A)
+            SH3.Cells((2 + ((B - 1) * (D_KOMA * 2 + 1))), (3 + A)).Interior.ColorIndex = 36
+            SH3.Cells((2 + ((B - 1) * (D_KOMA * 2 + 1))), (3 + A)).Font.Size = 13
+        Next
+        SH1.Cells(A + 3, 2) = teacher(A)
+    Next
+    
+    '出勤日以外を塗りつぶし
+    講師不在を灰色
+    
+    '罫線を引く
+    SH3.Range(SH3.Cells(2, 2), SH3.Cells((D_CNT - 1) * (D_KOMA * 2 + 1) + (D_KOMA * 2 + 2), 3 + T_CNT)).Borders.LineStyle = xlContinuous  'とりあえず細線で全部
+    For A = 1 To D_CNT
+        '日付単位で太枠にする
+        SH3.Range(SH3.Cells((A - 1) * (D_KOMA * 2 + 1) + 2, 2), SH3.Cells((A - 1) * (D_KOMA * 2 + 1) + (D_KOMA * 2 + 2), 3 + T_CNT)).BorderAround Weight:=xlMedium
+        For B = 1 To D_KOMA
+            '破線を追加する
+            SH3.Range(SH3.Cells(((((A - 1) * (D_KOMA * 2 + 1)) + 3) + ((B - 1) * 2)), 4), SH3.Cells(((((A - 1) * (D_KOMA * 2 + 1)) + 3) + ((B - 1) * 2)), 3 + T_CNT)).Borders(xlEdgeBottom).LineStyle = xlLineStyleNone
+        Next
+    Next
+
+    SH3.Activate
+    
+    教科別残り空き数
+    教師別残り空き数
+    
+End Sub
+
+
+
+

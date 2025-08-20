@@ -1,0 +1,49 @@
+
+
+'定数の設定
+Const D_CNT = 43 '講習の日数
+Const D_KOMA = 5 '一日のコマ数
+
+Private Sub データコピー_Click()
+    Dim SH1 As Worksheet
+    Dim SH2 As Worksheet
+    Dim SH3 As Worksheet
+    Dim SH4 As Worksheet
+    Dim SH5 As Worksheet
+    Dim SH6 As Worksheet
+    Dim SH7 As Worksheet
+    
+    Set SH1 = Worksheets("講師教科")    'ワークシートを選択
+    Set SH2 = Worksheets("講師日程")    'ワークシートを選択
+    Set SH3 = Worksheets("全日程")    'ワークシートを選択
+    Set SH4 = Worksheets("生徒教科")    'ワークシートを選択
+    Set SH5 = Worksheets("生徒日程")    'ワークシートを選択
+    Set SH6 = Worksheets("生徒入力用")    'ワークシートを選択
+    Set SH7 = Worksheets("生徒用スケ")    'ワークシートを選択
+
+   
+    
+    For A = 1 To SH6.Cells(1, 2).Value
+       For B = 1 To 2
+            If SH6.Cells(A + 3, B).Value <> "" Then
+                SH4.Cells(A * 4, B).Value = SH6.Cells(A + 3, B).Value
+                SH5.Cells(A + 3, B).Value = SH6.Cells(A + 3, B).Value
+            End If
+        Next B
+        
+        For B = 3 To 33
+            If ((SH6.Cells(A + 3, B).Interior.ColorIndex <> 38) And _
+                (SH6.Cells(A + 3, B) <> "")) Then
+                SH4.Cells(A * 4, B) = SH6.Cells(A + 3, B)
+                SH6.Cells(A + 3, B).Interior.ColorIndex = 38
+            End If
+
+        Next B
+
+    Next A
+    
+    SH4.Activate
+        
+    
+End Sub
+

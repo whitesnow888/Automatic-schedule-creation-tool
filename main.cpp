@@ -8,16 +8,16 @@
 #include <cstdlib>
 
 // ---------- Tunables ----------
-#define MAX_STUDENTS 200
+#define MAX_STUDENTS 300
 #define MAX_TEACHERS 100
 #define SUBJECTS     31
-#define DAYS         43          // Jul 18..Aug 31 inclusive
+#define DAYS         43          
 #define LECTURES     5
 #define SEATS        2
 #define MAX_PREF     3
 
 // ---------- Data Model ----------
-// Student availability: 1=available, 0=not
+// Student availability: 1=available,  0=not
 static unsigned char studentAvail[MAX_STUDENTS][DAYS][LECTURES];
 static unsigned char studentSubjectPerDayCount[MAX_STUDENTS][DAYS][SUBJECTS];
 
