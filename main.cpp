@@ -11,7 +11,7 @@
 #define MAX_STUDENTS 300
 #define MAX_TEACHERS 100
 #define SUBJECTS     31
-#define DAYS         43          
+#define DAYS         5          
 #define LECTURES     5
 #define SEATS        2
 #define MAX_PREF     3
@@ -157,14 +157,14 @@ static void scheduleOneSlot(int tch, int day, int lec, int sortedStu[]) {
     int bestAssigned = 0, bestSubj = -1, bestPass = 1;
 
     // Try both passes (1=enforce pref, 0=relaxed)
-        for (int pass = 1; pass >= 0; --pass) {
+    for (int pass = 1; pass >= 0; --pass) {
         for (int subj = 0; subj < SUBJECTS; ++subj) {
             if (!teacherCanTeach[tch][subj]) continue;
 
             // Dry-run: count potential assigns without mutating state
             int assigned = 0;
             int seatsLeft = SEATS;
-			
+            
             for (int idx = 0; idx < N_students && seatsLeft > 0; ++idx) {
                 int stu = sortedStu[idx];
                 if (studentDemand[stu][subj] <= 0) continue;
@@ -197,8 +197,52 @@ static void scheduleOneSlot(int tch, int day, int lec, int sortedStu[]) {
     }
 }
 
-// ---------- Main scheduling driver ----------
-void runSchedule() {
+int main() {
+    // TODO: Replace with your Excel-driven loaders
+    //////////////////////input
+	// Example problem with tiny sizes (overwrite N_students/M_teachers)
+    {
+    N_students = 3;
+    M_teachers = 3;
+
+    // Everyone available by default
+    memset(studentAvail, 1, sizeof(studentAvail));
+    memset(teacherAvail, 1, sizeof(teacherAvail));
+
+    // Teacher skills
+    memset(teacherCanTeach, 0, sizeof(teacherCanTeach));
+    teacherCanTeach[0][0] = 1; // T0 can teach subject 0
+    teacherCanTeach[0][2] = 1; // and 1
+    teacherCanTeach[1][1] = 1; // T1 can teach subject 1
+    teacherCanTeach[2][1] = 1; // T2 can teach subject 1    
+
+    // Demands
+    memset(studentDemand, 0, sizeof(studentDemand));
+    studentDemand[0][0] = 5;
+	studentDemand[0][2] = 2;
+	studentDemand[1][0] = 4;
+	studentDemand[1][1] = 3;
+	studentDemand[2][2] = 4;
+	
+    // Preferences: -1 means none
+    for (int s=0;s<MAX_STUDENTS;++s)
+        for (int sub=0; sub<SUBJECTS; ++sub)
+            for (int k=0;k<MAX_PREF;++k) preferredTeachers[s][sub][k] = -1;
+
+    preferredTeachers[0][0][0] = 0;
+	preferredTeachers[0][1][0] = 2;
+	preferredTeachers[0][1][1] = 1; // S0 prefers T0 for subj1
+    	
+	teacherAvail[0][0][0] = 0;
+	teacherAvail[1][0][0] = 0;
+	teacherAvail[1][0][3] = 0;
+	teacherAvail[2][0][1] = 0;
+	teacherAvail[2][0][4] = 0;
+	}
+	
+	
+	//////////////////////run
+    {
     // Initialize outputs
     for (int t=0;t<MAX_TEACHERS;++t)
         for (int d=0;d<DAYS;++d)
@@ -235,60 +279,13 @@ void runSchedule() {
             }
         }
     }
-}
 
-// ---------- Example placeholders for loading & dumping ----------
-// Replace these with your own Excel/CSV loaders.
-static void loadExampleTiny() {
-    // Example problem with tiny sizes (overwrite N_students/M_teachers)
-    N_students = 5;
-    M_teachers = 3;
-
-    // Everyone available by default
-    memset(studentAvail, 1, sizeof(studentAvail));
-    memset(teacherAvail, 1, sizeof(teacherAvail));
-
-    // Teacher skills
-    memset(teacherCanTeach, 0, sizeof(teacherCanTeach));
-    teacherCanTeach[0][0] = 1; // T0 can teach subject 0
-    teacherCanTeach[0][2] = 1; // and 1
-    teacherCanTeach[1][1] = 1; // T1 can teach subject 1
-    teacherCanTeach[1][2] = 1; // and 2
-    teacherCanTeach[2][0] = 1; // T2 can teach subject 1    
-
-    // Demands
-    memset(studentDemand, 0, sizeof(studentDemand));
-    studentDemand[0][0] = 3;
-	studentDemand[0][1] = 4;
-	studentDemand[1][1] = 7;
-	studentDemand[2][0] = 9;
-	studentDemand[2][2] = 2;
-	studentDemand[3][1] = 4; // S0 wants subj1 x3
-    studentDemand[4][0] = 3; // S1 wants subj1 x2
-    studentDemand[4][2] = 5; // S2 wants subj2 x2
-
-    // Preferences: -1 means none
-    for (int s=0;s<MAX_STUDENTS;++s)
-        for (int sub=0; sub<SUBJECTS; ++sub)
-            for (int k=0;k<MAX_PREF;++k) preferredTeachers[s][sub][k] = -1;
-
-    preferredTeachers[0][0][0] = 0;
-	preferredTeachers[0][0][1] = 2;
-	preferredTeachers[0][1][0] = 1; // S0 prefers T0 for subj1
-    preferredTeachers[1][1][0] = 1; // S1 prefers T0 for subj1
-    preferredTeachers[4][0][0] = 2;
-	preferredTeachers[4][2][0] = 1; // S2 prefers T1 for subj2
-	
-	teacherAvail[0][0][0] = 0;
-	teacherAvail[0][0][1] = 0;
-	teacherAvail[0][0][2] = 0;
-	teacherAvail[1][1][0] = 0;
-	teacherAvail[1][1][1] = 0;
-	
-}
-
-// Dump a small part of the schedule (first 2 days) for inspection
-static void dumpScheduleSample() {
+	}
+    
+    
+    
+    ///////////output
+    {
     for (int tch=0; tch<M_teachers; ++tch) {
         printf("=== Teacher %d ===\n", tch);
         for (int day=0; day<DAYS; ++day) {
@@ -303,16 +300,8 @@ static void dumpScheduleSample() {
         }
         printf("=================\n");
     }
-}
+	}
 
-int main() {
-    // TODO: Replace with your Excel-driven loaders
-    loadExampleTiny();
-
-    runSchedule();
-
-    // TODO: Replace with writer into Sheet1’s layout
-    dumpScheduleSample();
 
     return 0;
 }
